@@ -20,6 +20,37 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
+
+/**
+ * Spring Batch configuration that reads {@code SectorAccount} records from a CSV located
+ * on the classpath, validates and transforms them via a composite processor, and writes
+ * the results to an output CSV file. The output file path can be provided as a job
+ * parameter named {@code outputFile}.
+ *
+ * <p><strong>Flow:</strong></p>
+ * <ol>
+ *   <li><strong>Reader</strong> — {@link #reader()} reads from
+ *       {@code na-isal-june-2025-quarter-institutional-sector-accounts.CSV} on the classpath,
+ *       skipping the header row and mapping columns to {@code SectorAccount}.</li>
+ *   <li><strong>Processors</strong> — a {@link CompositeItemProcessor} chains
+ *       {@link #validationProcessor()} (filters invalid items) and
+ *       {@link #transformProcessor()} (normalizes/trims fields).</li>
+ *   <li><strong>Writer</strong> — {@link #csvWriter(String)} writes to a CSV with a fixed header;
+ *       the destination is controlled by the {@code outputFile} job parameter (defaults to
+
+ *       {@code output-sector-accounts.csv}).</li>
+ *   <li><strong>Job/Step</strong> — {@link #importUserJob(JobRepository, Step, JobCompletionNotificationListener)}
+ *       runs a single step {@link #step1(JobRepository, org.springframework.transaction.PlatformTransactionManager, FlatFileItemReader, CompositeItemProcessor, FlatFileItemWriter)}
+ *       configured with chunk size {@code 3}.</li>
+ * </ol>
+ *
+ * <p><strong>Usage Example (Job Parameters):</strong></p>
+ * <pre>
+ * outputFile=/tmp/sector-accounts-clean.csv
+ * </pre>
+ */
+
+
 @Configuration
 public class BatchConfiguration {
 
